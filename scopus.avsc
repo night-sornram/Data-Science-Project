@@ -1,0 +1,104 @@
+{
+    "type": "record",
+    "name": "Scopus",
+    "fields": [
+      {
+        "name": "title",
+        "type": ["string", "null"]
+      },
+      {
+        "name": "abstract",
+        "type": ["string", "null"]
+      },
+      {
+        "name": "classifications",
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "Classification",
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "value",
+                "type": {
+                  "type": "array",
+                  "items": "string"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "date_publication",
+        "type": {
+          "type": "record",
+          "name": "DatePublication",
+          "fields": [
+            {
+              "name": "year",
+              "type": "string"
+            },
+            {
+              "name": "month",
+              "type": ["string", "null"]
+            },
+            {
+              "name": "day",
+              "type": ["string", "null"]
+            }
+          ]
+        }
+      },
+      {
+        "name": "affiliation",
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "Affiliation",
+            "fields": [
+              {
+                "name": "affiliation-city",
+                "type": ["string", "null"]
+              },
+              {
+                "name": "@id",
+                "type": "string"
+              },
+              {
+                "name": "affilname",
+                "type": "string"
+              },
+              {
+                "name": "@href",
+                "type": "string"
+              },
+              {
+                "name": "affiliation-country",
+                "type": ["string", "null"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "references",
+        "type": {
+          "type": "array",
+          "items": "string"
+        }
+      },
+      {
+        "name": "keywords",
+        "type": {
+          "type": "array",
+          "items": "string"
+        }
+      }
+    ]
+  }

@@ -1,22 +1,7 @@
-from kafka import KafkaProducer
-import avro.schema
-import avro.io
-import io
-import hashlib, json
+from Kafka.main import KafkaScopus
 
-def serialize(schema, obj):
-    bytes_writer = io.BytesIO()
-    encoder = avro.io.BinaryEncoder(bytes_writer)
-    writer = avro.io.DatumWriter(schema)
-    writer.write(obj, encoder)
-    return bytes_writer.getvalue()
+kafka_data1 = KafkaScopus('localhost:9092', 'scopus', '2023')
+kafka_data1.run()
 
-def deserialize(schema, raw_bytes):
-    bytes_reader = io.BytesIO(raw_bytes)
-    decoder = avro.io.BinaryDecoder(bytes_reader)
-    reader = avro.io.DatumReader(schema)
-    return reader.read(decoder)
-
-kafka_broker = 'localhost:9092'
-
-
+kafka_data2 = KafkaScopus('localhost:9092', 'scopus', '2021')
+kafka_data2.run()
