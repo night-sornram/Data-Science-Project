@@ -203,7 +203,7 @@ for link in links[start:]:
         producer.flush()
         papers.append(paper)
         print(f'Getting paper {len(papers)} from {link} from {link_html} and {link_abs} with title {title}')
-        print(f'link index: {link.index} and link_abs index: {link_abs.index}')
+        print(f'link index: {links.index(link)} and link_abs index: {links_abs.index(link_abs)}')
         print('------------------------------------------')
         if len(papers) == target:
             break_flag = True
