@@ -34,10 +34,10 @@ def serialize(schema, obj):
 
 def is_valid_url(url):
     # Check if the URL starts with 'https://arxiv.org/'
-    return url.startswith('https://arxiv.org/')
+    return url.startswith('https://export.arxiv.org/')
 
 
-arxiv_url = 'https://arxiv.org/'
+arxiv_url = 'https://export.arxiv.org/'
 
 data = requests.get(arxiv_url)
 soup = BeautifulSoup(data.text, 'html.parser')
@@ -46,7 +46,7 @@ links = []
 
 links = [a['href'] for a in soup.find_all('a', href=True)]
 links = [ l for l in links if '/recent' in l]
-links = [f'https://arxiv.org{l}' for l in links]
+links = [f'https://export.arxiv.org{l}' for l in links]
 
 # let's try to get the 100 papers
 papers = []
@@ -56,15 +56,14 @@ break_flag = False
 # for loop to get the 100 papers
 classifications = []
 
-start = 324
 
-for link in links[start:]:
+for link in links[17:]:
     data = requests.get(link)
     print(f'Getting {link}')
     soup = BeautifulSoup(data.text, 'html.parser')
     links_paper = [a['href'] for a in soup.find_all('a', href=True)]
     # all paper must have abs in link but some of them have html, if it not have html i will skip it in status code from requests
-    links_abs = [ f'https://arxiv.org{l}' for l in links_paper if '/abs/' in l]
+    links_abs = [ f'https://export.arxiv.org{l}' for l in links_paper if '/abs/' in l]
     links_html = [ l.replace('abs','html') for l in links_abs ]
     # for loop to get the 10 papers from each link
     for i in range(len(links_abs)):
@@ -107,6 +106,7 @@ for link in links[start:]:
         else:
             print('No abstract')
             continue
+        print(abstract)
         pub_date = soup.select('div.ltx_dates')
         pub_date_locate = soup2.find('div', {'class': 'submission-history'})
         pub_date = pub_date_locate.find('strong').find_next_sibling(string=True).strip().strip('"')
