@@ -56,9 +56,9 @@ break_flag = False
 # for loop to get the 100 papers
 classifications = []
 
-print('here')
+start = 324
 
-for link in links:
+for link in links[start:]:
     data = requests.get(link)
     print(f'Getting {link}')
     soup = BeautifulSoup(data.text, 'html.parser')
