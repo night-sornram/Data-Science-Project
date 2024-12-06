@@ -57,7 +57,7 @@ break_flag = False
 classifications = []
 
 
-for link in links[17:]:
+for link in links[64:]:
     data = requests.get(link)
     print(f'Getting {link}')
     soup = BeautifulSoup(data.text, 'html.parser')
@@ -106,10 +106,9 @@ for link in links[17:]:
         else:
             print('No abstract')
             continue
-        print(abstract)
         pub_date = soup.select('div.ltx_dates')
         pub_date_locate = soup2.find('div', {'class': 'submission-history'})
-        pub_date = pub_date_locate.find('strong').find_next_sibling(string=True).strip().strip('"')
+        pub_date = pub_date_locate.find('b').find_next_sibling(string=True).strip().strip('"')
         date_match = re.search(r'(\d{1,2}) (\w+) (\d{4})', pub_date)
         if date_match:
             pub_day, pub_month, pub_year = date_match.groups()
@@ -208,7 +207,7 @@ for link in links[17:]:
         if len(papers) == target:
             break_flag = True
             break
-        time.sleep(2)
+        # time.sleep(2)
     if break_flag:
         break
 

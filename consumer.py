@@ -1,8 +1,9 @@
+import os
+import csv
 from kafka import KafkaConsumer
 import avro.schema
-import avro.io
+from avro.io import DatumReader, BinaryDecoder
 import io
-import csv
 
 csv_file_path = 'scopus_messages.csv'
 
@@ -23,19 +24,13 @@ scopusconsumer = KafkaConsumer(
      enable_auto_commit=True,
      value_deserializer=lambda x: deserialize(scopusschema, x))
 
-with open(csv_file_path, mode='w', newline='', encoding='utf-8') as csv_file:
+
+with open(csv_file_path, mode='a', newline="", encoding='utf-8') as csv_file:
     csv_writer = csv.writer(csv_file)
-    header_written = False
-    
     for message in scopusconsumer:
-        message_value = message.value
-        if not header_written and isinstance(message_value, dict):
-            header = message_value.keys()
-            csv_writer.writerow(header)
-            header_written = True
-        if isinstance(message_value, dict):
-            csv_writer.writerow(message_value.values())
-        else:
-            csv_writer.writerow([message_value])
+        # Assuming the message value is a dictionary
+        data = message.value
+        csv_writer.writerow(data.values())
+
 
 print(f'Messages have been written to {csv_file_path}')
