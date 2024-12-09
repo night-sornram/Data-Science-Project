@@ -57,7 +57,7 @@ break_flag = False
 classifications = []
 
 
-for link in links[64:]:
+for link in links:
     data = requests.get(link)
     print(f'Getting {link}')
     soup = BeautifulSoup(data.text, 'html.parser')

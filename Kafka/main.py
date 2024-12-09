@@ -4,7 +4,9 @@ import avro.io
 import io
 import json
 import os
+import pandas as pd
 from tqdm import tqdm
+
 
 class KafkaScopus:
     def __init__(self, kafka_broker, topic, folder):
@@ -17,6 +19,35 @@ class KafkaScopus:
         self.topic = topic
         self.number = int(self.folder + "00000")
         self.count = 0
+        self.subject_areas_dict = scopus_subject_areas = {
+            1000: "Multidisciplinary",
+            1100: "Agricultural and Biological Sciences",
+            1200: "Arts and Humanities",
+            1300: "Biochemistry, Genetics and Molecular Biology",
+            1400: "Business, Management, and Accounting",
+            1500: "Chemical Engineering",
+            1600: "Chemistry",
+            1700: "Computer Science",
+            1800: "Decision Sciences",
+            1900: "Earth and Planetary Sciences",
+            2000: "Economics, Econometrics and Finance",
+            2100: "Energy",
+            2200: "Engineering",
+            2300: "Environmental Science",
+            2400: "Immunology and Microbiology",
+            2500: "Materials Science",
+            2600: "Mathematics",
+            2700: "Medicine",
+            2800: "Neuroscience",
+            2900: "Nursing",
+            3000: "Pharmacology, Toxicology, and Pharmaceutics",
+            3100: "Physics and Astronomy",
+            3200: "Psychology",
+            3300: "Social Sciences",
+            3400: "Veterinary",
+            3500: "Dentistry",
+            3600: "Health Professions"
+        }
 
     def serialize(self, schema, obj):
         bytes_writer = io.BytesIO()
@@ -33,88 +64,122 @@ class KafkaScopus:
         with open(file_path, 'r', encoding='utf-8') as file:
             return json.load(file)
 
-    def convert_classification(self, data):
+    def title_convert(self, data):
+        return data['abstracts-retrieval-response']['coredata'].get("dc:title", None)
 
-        result_data = []
-        for item in data:
-            result = {}
-            result["name"] = item['@type']
-            classifications = item['classification']
+    def abstract_convert(self, data):
+        return data['abstracts-retrieval-response']['coredata'].get("dc:description", None)
 
-            if isinstance(classifications, list):
-                result["value"] = [list(classification.values())[0]
-                                   for classification in classifications]
-            elif isinstance(classifications, dict):
-                result["value"] = [list(classifications.values())[0]]
+    def publication_date_convert(self, data):
+        publication = data['abstracts-retrieval-response']['item']['bibrecord']['head']['source']['publicationdate']
+
+        year = publication.get("year", "Unknown")
+        month = publication.get("month", "01")
+        day = publication.get("day", "01")
+
+        if year == "Unknown":
+            return None
+        else:
+            month = f"{int(month):02}" if month.isdigit() else "01"
+            day = f"{int(day):02}" if day.isdigit() else "01"
+
+            # ISO 8601 format
+            return f"{year}-{month}-{day}"
+
+    def prism_type_convert(self, data):
+        return data['abstracts-retrieval-response']['coredata'].get("prism:aggregationType", None)
+
+    def keywords_convert(self, data):
+        if data['abstracts-retrieval-response'].get('authkeywords') is not None:
+            keywords = data['abstracts-retrieval-response']['authkeywords'].get(
+                "author-keyword", None)
+            if isinstance(keywords, list):
+                k = ';'.join(keyword['$'].replace(' ', '')
+                             for keyword in keywords)
+                return k
             else:
-                result["value"] = [classifications]
-            result_data.append(result)
-        return result_data
-
-    def convert_affiliation(self, data):
-        if isinstance(data, list):
-            return data
+                return None
         else:
-            return [data]
-
-    def convert_references(self, data):
-        if (data["abstracts-retrieval-response"]["item"]["bibrecord"]["tail"] == None):
-            return []
-        
-        data = data["abstracts-retrieval-response"]["item"]["bibrecord"]["tail"]["bibliography"]["reference"]
-        if isinstance(data, list):
-            return [ref["ref-fulltext"] for ref in data]
-        else:
-            return [data["ref-fulltext"]]
-
-    def convert_keywords(self, data):
-        if (data == None):
-            return []
-        if isinstance(data["author-keyword"], list):
-            return [keyword["$"] for keyword in data["author-keyword"]]
-        else:
-            return [data["author-keyword"]["$"]]
-        
-    def convert_date(self, data):
-        return {
-            "year": data["year"] if "year" in data else None,
-            "month": data["month"] if "month" in data else None,
-            "day": data["day"] if "day" in data else None
-        }
-
-    def extract_data(self, data):
-        try:
-            title = data["abstracts-retrieval-response"]["item"]["bibrecord"]["head"]["citation-title"]
-            abstract = data["abstracts-retrieval-response"]["item"]["bibrecord"]["head"]["abstracts"]
-            classifications = self.convert_classification(
-                data["abstracts-retrieval-response"]["item"]["bibrecord"]["head"]["enhancement"]["classificationgroup"]["classifications"])
-            date_publication = self.convert_date(
-                data["abstracts-retrieval-response"]["item"]["bibrecord"]["head"]["source"]["publicationdate"])
-            affiliation = self.convert_affiliation(
-                data["abstracts-retrieval-response"]["affiliation"])
-            references = self.convert_references(
-                data)
-            keywords = self.convert_keywords(
-                data["abstracts-retrieval-response"]["authkeywords"])
-        except KeyError as e:
-            print(f"Key error: {e}")
             return None
 
+    def subject_areas_convert(self, data):
+        # array
+        areas = data['abstracts-retrieval-response']['subject-areas'].get('subject-area', None)
+        
+        if areas is not None:
+            a = ';'.join(self.subject_areas_dict[round(int(area['@code'])/100)*100]
+                         for area in areas)
+            return a
+
+    def ref_count_convert(self, data):
+        tail = data['abstracts-retrieval-response']['item']['bibrecord']['tail']
+
+        if tail is not None:
+            count = tail.get("bibliography").get("@refcount", None)
+            if count is not None:
+                return int(count)
+
+    def publisher_convert(self, data):
+        return data['abstracts-retrieval-response']['coredata'].get("dc:publisher", None)
+
+    def affiliation_convert(self, data):
+        affiliations = data['abstracts-retrieval-response']['affiliation']
+        if isinstance(affiliations, list):
+            af = ';'.join(
+                f"{aff['affilname']}, {aff['affiliation-country']}"
+                for aff in affiliations
+            )
+
+            return af
+
+        else:
+            return f"{affiliations['affilname']}, {affiliations['affiliation-country']}"
+
+    def authors_convert(self, data):
+        authors = data['abstracts-retrieval-response']['authors']['author']
+
+        if isinstance(authors, list):
+
+            s = ';'.join(
+                f"{author['preferred-name']['ce:surname']} {author['preferred-name']['ce:given-name']}"
+                for author in authors
+            )
+
+            return s
+        else:
+            return None
+
+    def extract_data(self, data):
+        title = self.title_convert(data)
+        abstract = self.abstract_convert(data)
+        publication_date = self.publication_date_convert(data)
+        prism_type = self.prism_type_convert(data)
+        keywords = self.keywords_convert(data)
+        subject_areas = self.subject_areas_convert(data)
+        ref_count = self.ref_count_convert(data)
+        publisher = self.publisher_convert(data)
+        affiliation = self.affiliation_convert(data)
+        authors = self.authors_convert(data)
+
         return {
+            "code": str(self.number),
             "title": title,
             "abstract": abstract,
-            "classifications": classifications,
-            "date_publication": date_publication,
+            "publication_date": publication_date,
+            "prism_type": prism_type,
+            "keywords": keywords,
+            "subject_area": subject_areas,
+            "ref_count": ref_count,
+            "publisher": publisher,
             "affiliation": affiliation,
-            "references": references,
-            "keywords": keywords
+            "authors": authors
         }
 
     def produce(self, data):
         serialized_data = self.serialize(self.schema, data)
         self.producer.send(self.topic, serialized_data)
         self.producer.flush()
-        
+
     def run(self):
         len_files = self.count_files_in_folder()
         with tqdm(total=len_files, desc="Processing files", unit="file") as pbar:
@@ -126,4 +191,3 @@ class KafkaScopus:
                     self.produce(extracted_data)
                     self.count += 1
                 pbar.update(1)
-        

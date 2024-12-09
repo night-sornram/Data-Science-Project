@@ -7,6 +7,11 @@ import io
 
 csv_file_path = 'scopus_messages.csv'
 
+headers = [
+    "code", "title", "abstract", "publication_date", "prism_type", "keywords",
+    "subject_area", "ref_count", "publisher", "affiliation", "authors"
+]
+
 def deserialize(schema, raw_bytes):
     bytes_reader = io.BytesIO(raw_bytes)
     decoder = avro.io.BinaryDecoder(bytes_reader)
@@ -27,10 +32,9 @@ scopusconsumer = KafkaConsumer(
 
 with open(csv_file_path, mode='a', newline="", encoding='utf-8') as csv_file:
     csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(headers)
     for message in scopusconsumer:
-        # Assuming the message value is a dictionary
         data = message.value
         csv_writer.writerow(data.values())
-
 
 print(f'Messages have been written to {csv_file_path}')

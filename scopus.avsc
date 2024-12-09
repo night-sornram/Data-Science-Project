@@ -1,104 +1,50 @@
 {
-    "type": "record",
-    "name": "Scopus",
-    "fields": [
+  "type": "record",
+  "name": "Scopus",
+  "fields": [
       {
-        "name": "title",
-        "type": ["string", "null"]
+          "name": "code",
+          "type":[ "string", "null"]
       },
       {
-        "name": "abstract",
-        "type": ["string", "null"]
+          "name": "title",
+          "type": ["string", "null"]
       },
       {
-        "name": "classifications",
-        "type": {
-          "type": "array",
-          "items": {
-            "type": "record",
-            "name": "Classification",
-            "fields": [
-              {
-                "name": "name",
-                "type": "string"
-              },
-              {
-                "name": "value",
-                "type": {
-                  "type": "array",
-                  "items": "string"
-                }
-              }
-            ]
-          }
-        }
+          "name": "abstract",
+          "type": ["string", "null"]
       },
       {
-        "name": "date_publication",
-        "type": {
-          "type": "record",
-          "name": "DatePublication",
-          "fields": [
-            {
-              "name": "year",
-              "type": "string"
-            },
-            {
-              "name": "month",
-              "type": ["string", "null"]
-            },
-            {
-              "name": "day",
-              "type": ["string", "null"]
-            }
-          ]
-        }
+          "name": "publication_date",
+          "type": ["string", "null"]
       },
       {
-        "name": "affiliation",
-        "type": {
-          "type": "array",
-          "items": {
-            "type": "record",
-            "name": "Affiliation",
-            "fields": [
-              {
-                "name": "affiliation-city",
-                "type": ["string", "null"]
-              },
-              {
-                "name": "@id",
-                "type": "string"
-              },
-              {
-                "name": "affilname",
-                "type": "string"
-              },
-              {
-                "name": "@href",
-                "type": "string"
-              },
-              {
-                "name": "affiliation-country",
-                "type": ["string", "null"]
-              }
-            ]
-          }
-        }
+          "name": "prism_type",
+          "type": ["string", "null"]
       },
       {
-        "name": "references",
-        "type": {
-          "type": "array",
-          "items": "string"
-        }
+          "name": "keywords",
+          "type": ["string", "null"]
       },
       {
-        "name": "keywords",
-        "type": {
-          "type": "array",
-          "items": "string"
-        }
+          "name": "subject_area",
+          "type": ["string", "null"]
+      },
+      {
+          "name": "ref_count",
+          "type": ["int", "null"]
+      },
+      {
+          "name": "publisher",
+          "type": ["string", "null"]
+      },
+      {
+          "name": "affiliation",
+          "type": ["string", "null"]
+      },
+      {
+          "name": "authors",
+          "type": ["string", "null"]
       }
-    ]
-  }
+  ]
+}

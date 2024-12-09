@@ -18,11 +18,11 @@ Ternimal1 :
 Terminal2 :
     .venv\Scripts\activate
 
-    python main.py
+    python producer.py
 
     ....wait until finished....
 
-    python clean_data.py
+    python main.py
 
 # Docker
 docker-compose up -d
