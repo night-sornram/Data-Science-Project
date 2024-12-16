@@ -30,6 +30,8 @@ scopusconsumer = KafkaConsumer(
      value_deserializer=lambda x: deserialize(scopusschema, x))
 
 
+print("Consuming messages from Kafka topic 'scopus'...")
+
 with open(csv_file_path, mode='a', newline="", encoding='utf-8') as csv_file:
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(headers)
